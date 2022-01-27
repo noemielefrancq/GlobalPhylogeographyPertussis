@@ -12,10 +12,10 @@ In this folder, you will find the data used in this study:
 The interactive tree is available on MicroReact [here](https://microreact.org/project/gWJRauq26T5JWXjNRCux4M-global-phylogeography-b-pertussis).
 
 ## Diversity
-In this folder, you will find the code to replicate the diversoty analysis
+In this folder, you will find the code to replicate the diversity analysis
 
 ## Geographical spread
-In this folder, you will find the code to replicate the BEAST analysis
+In this folder, you will find the code to replicate the spread analysis
 
 ## Fitness model
 In this folder, you will find the code to replicate the fitness analysis
