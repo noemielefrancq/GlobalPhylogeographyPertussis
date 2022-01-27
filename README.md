@@ -1,6 +1,6 @@
 # GlobalPhylogeographyPertussis
 
-Code used for the paper: *Global spatial dynamics and vaccine-induced fitness changes of Bordetella pertussis*
+Code used for the paper: *Global spatial dynamics and vaccine-induced fitness changes of Bordetella pertussis*, Lefrrancq N. et. al. (2022)
 
 ## Data
 
