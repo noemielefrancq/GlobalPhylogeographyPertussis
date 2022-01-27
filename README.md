@@ -7,7 +7,7 @@ Code used for the paper: *Global spatial dynamics and vaccine-induced fitness ch
 In this folder, you will find the data used in this study:
 - the alleles of gene of interest: ptxA, ptxP, fim2 and fim3
 - the description of all the isolates and their accession numbers
-- the code used for the SNP detection (XX.sh and XX.R for further filtering)
+- the code used for the SNP detection
 
 The interactive tree is available on MicroReact [here](https://microreact.org/project/gWJRauq26T5JWXjNRCux4M-global-phylogeography-b-pertussis).
 
