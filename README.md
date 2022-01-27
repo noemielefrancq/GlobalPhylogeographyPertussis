@@ -9,6 +9,8 @@ In this folder, you will find the data used in this study:
 - the description of all the isolates and their accession numbers
 - the code used for the SNP detection (XX.sh and XX.R for further filtering)
 
+The interactive tree is available on MicroReact [here](https://microreact.org/project/gWJRauq26T5JWXjNRCux4M-global-phylogeography-b-pertussis).
+
 ## Diversity
 In this folder, you will find the code to replicate the diversoty analysis
 
