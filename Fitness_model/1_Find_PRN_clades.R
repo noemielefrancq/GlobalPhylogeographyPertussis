@@ -1,19 +1,29 @@
-## Clade seach
+#######################################################
+## Code to find the PRN-deficient clades 
+## in a phylogenetic tree
+#######################################################
+### Author: Noemie Lefrancq
+### Last modification: 28/01/2022
+#######################################################
+
+
+## Load necessary packages
 library(ape)
 library(treeio)
 
 #######################################################
-### WARNING
 ### NEED A TREE ORDERED BY 'INCRESING NODE ORDER' (!) 
 ### FIGTREE IS THE SIMPLEST
 ##########################################################
 
-## Load beast tree
+## Load tree
 tree.beast = read.beast('Data/Beast_tree_MCC_26012022.tree')
+
 
 ## Load data
 data_tip = read.csv(file = 'Data/Metadata_analyses_26012022.csv', sep = ';')
-data_tip$ï..Isolate[which(data_tip$ï..Isolate == 'Tohama')] = 'Tohama-I'
+data_tip$Ã¯..Isolate[which(data_tip$Ã¯..Isolate == 'Tohama')] = 'Tohama-I'
+
 
 ## Clean prn labels
 data_tip$prn.expression = as.character(data_tip$prn.expression)
@@ -23,21 +33,27 @@ to_drop = which(data_tip$prn.expression == 'Unkown' | is.na(data_tip$prn.express
 data_tip$prn.expression[which(data_tip$prn.expression == 'Unkown' | is.na(data_tip$prn.expression) == T)] = NA
 data_tip$prn.expression = as.numeric(data_tip$prn.expression)
 
+
 ## Drop unknwon PRNs
-prn_to_drop = data_tip$ï..Isolate[to_drop] ## tips with unkwown PRN labels
+prn_to_drop = data_tip$Ã¯..Isolate[to_drop] ## tips with unkwown PRN labels
 tree.beast = treeio::drop.tip(tree.beast, tip = as.character(prn_to_drop[which(is.na(prn_to_drop) == F)])) ## drop tips with unkwown PRN labels 
+
 
 ## Tree in phylo class
 tree = tree.beast@phylo
 
+
 ## Get tip lables
-a = match(tree$tip.label, data_tip$ï..Isolate)
+a = match(tree$tip.label, data_tip$Ã¯..Isolate)
 data_tip = data_tip[a,]
 prn_labels = data_tip$prn.expression
 
-## Write new 'beast tree'
+
+## Write new beast tree
 write.beast(tree.beast, 'Estimate_relative_fitness/Beast_tree_MCC_26012022_known_prn_expression.tree')
 ######################################################################################################################################
+
+
 
 
 ######################################################################################################################################
@@ -72,6 +88,7 @@ while (ii < length(prn_labels)){
   print(ii)
 }
 d = data.frame('prn' = prn_labels, 'clade' = clade_number)
+
 
 ######################################################################################################################################
 ## Collapse as much as possible the clades into monophyletic, prn- ones
@@ -147,7 +164,7 @@ a = which(clade_number == 1)
 tips = tips_names[a]
 data_tip_tmp = data_tip[which(data_tip$fim3 == 'fim3-1' & 
                                                             data_tip$ptxP == 'ptxP3'),]
-b = match(tips, data_tip_tmp$ï..Isolate)
+b = match(tips, data_tip_tmp$Ã¯..Isolate)
 MRCA = getMRCA(tree.beast@phylo, tips[which(!is.na(b))])
 e = as.data.frame(offspring(y, MRCA))
 m = match(e$node, d$node)
@@ -160,7 +177,7 @@ a = which(clade_number == 1)
 tips = tips_names[a]
 data_tip_tmp = data_tip[which(data_tip$fim3 == 'fim3-2' & 
                                                             data_tip$ptxP == 'ptxP3'),]
-b = match(tips, data_tip_tmp$ï..Isolate)
+b = match(tips, data_tip_tmp$Ã¯..Isolate)
 MRCA = getMRCA(tree.beast@phylo, tips[which(!is.na(b))])
 e = as.data.frame(offspring(y, MRCA))
 m = match(e$node, d$node)
