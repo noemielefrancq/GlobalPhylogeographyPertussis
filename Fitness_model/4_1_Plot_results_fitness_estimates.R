@@ -1,13 +1,24 @@
+#######################################################
+## Figure 4: Plot estimates from model ouput
+#######################################################
+### Author: Noemie Lefrancq
+### Last modification: 28/01/2022
+#######################################################
+
+
+
+## Load required packages
 library(ggplot2)
 library(rstan)
-
-setwd('E:/Stages/Project_Pertussis/fitness_genotypes/')
 
 ## Load fit
 fit = readRDS(file = 'Estimate_relative_fitness/Output_WCV_booster_ref3_fit_all.rds')
 
-## Chains
+## Extract chains
 Chains=rstan::extract(fit$fit)
+
+
+
 
 ################################################################################
 ## Functions
@@ -27,6 +38,9 @@ f2 <- function(x) {
   r
 }
 ################################################################################
+
+
+
 
 ################################################################################
 ## Compute data to plot
