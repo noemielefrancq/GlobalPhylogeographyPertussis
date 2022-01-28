@@ -1,6 +1,6 @@
 #######################################################
 ## Figure 2: Proportion of pairs by MRCA window,
-##           for a variaty of locations
+##           for a variety of locations
 #######################################################
 ### Author: Noemie Lefrancq
 ### Last modification: 28/01/2022
