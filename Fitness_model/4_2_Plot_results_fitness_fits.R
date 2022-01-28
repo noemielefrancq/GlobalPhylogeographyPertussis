@@ -1,34 +1,47 @@
-## Predicted number vs. observed plot
-## Library
+#######################################################
+## Figure 4: Plot fits from model output
+#######################################################
+### Author: Noemie Lefrancq
+### Last modification: 28/01/2022
+#######################################################
+
+
+
+## Load required packages
 library(rstan)
 library(RColorBrewer)
 library(binom)
 
+## Load fit
 fit = readRDS(file = 'Estimate_relative_fitness/Output_WCV_booster_ref3_fit_all.rds')
 
-## Chains
+## Extract chains
 Chains=rstan::extract(fit$fit)
 
-## Comon parameters
-nb_countries = fit$data$nb_countries
+
+
+############################################################################################
+## Common parameters
+############################################################################################
+nb_countries = fit$data$nb_countries # Number of countries
+nb_genotypes = fit$data$nb_genotypes # Number genotypes
+nb_years = fit$data$nb_years # Number years
+ref_clade = 3 # Reference clade
+threshold = 5 ## Min number of isolates per year to plot
+min_date = 1940
+nb_chains = length(Chains$lp__)
+
+# Country names
 Cnty = c('AU', 'BE', 'CA', 'CN', 'CZ', 'DK', 'ES', 'FI', 'FR', 'IE', 'IL', 'IT', 'NL', 'NO', 'SE', 'UK', 'US', 'JP', 'IR', 'TN')
-nb_genotypes = fit$data$nb_genotypes
-nb_years = fit$data$nb_years
-nb_countries = fit$data$nb_countries
-ref_clade = 3 
+
+## Observed numbers per clade
 numbers_obs_all_clades = array(NA, dim = c(nb_genotypes, nb_years, nb_countries)) 
 for(i in 1:nb_countries){
   numbers_obs_all_clades[1:(nb_genotypes-1),,i] = fit$data$data_genotype_non_ref[,,i]
   numbers_obs_all_clades[nb_genotypes,,i] = fit$data$data_genotype_ref[,i]
 }
-threshold = 5
 
-
-min_date = 1940
-nb_chains = length(Chains$lp__)
-
-
-## Colors
+## Colors to plot, per continent
 colors_continents = c('saddlebrown', 'red3', 'orange2', 'darkgreen', 'royalblue2')
 Continent_country_match = c(4, 5, 2, 3, 5, 5, 5, 5, 5, 5, 3, 5, 5, 5, 5, 5, 2, 3, 3, 1)
 cols = colors_continents[Continent_country_match]
@@ -37,6 +50,8 @@ cols = colors_continents[Continent_country_match]
 mean.and.ci <-function(v){
   return( c(mean(v), as.numeric(quantile(v,probs = 0.025, na.rm = T)), as.numeric(quantile(v,probs = 0.975, na.rm = T))))
 }
+############################################################################################
+
 
 
 
@@ -223,7 +238,6 @@ axis(1, las = 1, cex.axis = cexaxis, at = seq(0,1,0.25), labels = c("0", "", "0.
 for(i in 2:nb_countries){
   points(freqs_obs[,,rd[i]], freqs_pred_m[,,rd[i]], col = adjustcolor(cols[rd[i]], alpha.f = 0.9), pch = 20, cex = cexdots)
 }
-
 
 ## Plot changes predicted numbers
 change_obs = fit$data$data_genotype_non_ref[,-1,]/fit$data$data_genotype_non_ref[,-nb_years,]
