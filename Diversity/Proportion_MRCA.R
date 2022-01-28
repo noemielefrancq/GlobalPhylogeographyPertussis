@@ -7,41 +7,42 @@
 #######################################################
 
 
-########################################################################################
-## Compute the proportion of pairs by MRCA bin
-########################################################################################
+## Load necessary packages
 library(ape)
 library(stringr)
 library(lubridate)
 library(REdaS)
 library(questionr)
 
-##Load the data--------------------------------------------------------------------------------------
-##Tree
+
+
+## Load tree
 tree = read.nexus('Data/Beast_tree_MCC_26012022.tree')
 
-##Create the global master dataframes and lists------------------------------------------------------
+
+
+## Create the global master dataframes
 case.data_all = read.csv(file = 'Data/Metadata_analyses_26012022.csv', sep = ';')
 colnames(case.data_all)[2] = 'Isolates'
-tree_tmp = trees[[1]]
+tree_tmp = tree
 tree_tmp = drop.tip(tree_tmp, tip = 'Tohama-I')
 name.isolates = sapply(tree_tmp$tip.label, function(x)strsplit(x,split="_")[[1]][[1]]) #Isolate numbers
 master.dat = case.data_all[match(name.isolates, case.data_all$Isolates),]
 master.seq.names = master.dat$Isolates
 
-##Compute matrices ----------------------------------------------------------------------------------
 
-########################  TIME  ###################################
-#Compute time distances
+######################################################################
+## Compute matrices 
+######################################################################
+
+##  Time differences between isolates
 time_mat = abs(outer(master.dat$Collection.Year,master.dat$Collection.Year,"-"))
 colnames(time_mat) = master.seq.names
 rownames(time_mat) = master.seq.names
 diag(time_mat)<-NA
-######################################################################
 
 
-######################## GENETIC ###################################
-#Genetic distance matrix
+## Genetic distances between isolates 
 dist.mat<-cophenetic.phylo(tree)
 seq.names<-row.names(dist.mat)
 b<-match(as.character(master.dat$Isolates), seq.names)
@@ -52,12 +53,12 @@ colnames(gene_mat) = master.seq.names
 rownames(gene_mat) = master.seq.names
 diag(gene_mat)<-NA
 
-MRCA_mat = (gene_mat - time_mat)/2 #make the genetic matrix "independant" of the difference in the isolation dates 
+MRCA_mat = (gene_mat - time_mat)/2 
 MRCA_mat[which(MRCA_mat == 0)] = 1E-6
-######################################################################
 
-######################## GEOGRAPHY ###################################
-#Matrix region, world
+
+
+## Matrix same region (1:pair from the same region, 0: pair NOT from the same region)
 master.dat_tmp = master.dat
 geo_mat_region_world<-matrix(0,length(master.dat_tmp$Country),length(master.dat_tmp$Country))
 master.dat_tmp$Region = as.factor(master.dat_tmp$Region)
@@ -69,7 +70,9 @@ colnames(geo_mat_region_world) = master.seq.names
 rownames(geo_mat_region_world) = master.seq.names
 diag(geo_mat_region_world)<-NA
 
-#Matrix countries
+
+
+## Matrix same countries (1:pair from the same country, 0: pair NOT from the same country)
 geo_mat_country<-matrix(0,length(master.dat$Country),length(master.dat$Country))
 master.dat$Country = as.factor(master.dat$Country)
 for (i in levels(master.dat$Country)){
@@ -80,7 +83,9 @@ colnames(geo_mat_country) = master.seq.names
 rownames(geo_mat_country) = master.seq.names
 diag(geo_mat_country)<-NA
 
-#Matrix continent
+
+
+## Matrix same continent (1:pair from the same continent, 0: pair NOT from the same continent)
 geo_mat_continent<-matrix(0,length(master.dat$Continent),length(master.dat$Continent))
 master.dat$Continent = as.factor(master.dat$Continent)
 for (i in levels(master.dat$Continent)){
@@ -93,16 +98,29 @@ diag(geo_mat_continent)<-NA
 ######################################################################
 
 
+
+
+
+
+
+
 ######################################################################
-## Compute the proportion of pairs by MRCA bin                       #   
+## Main computation: proportion of pairs by MRCA bin                 #   
 ######################################################################
+## Define MRCA windows
 breaks = c(0, 2, 5, 10, 20, 1E10)
+## Number of categories
 nb_cat = length(breaks)-1
+## Names of the loctions to consider
 loc = rep(c('BSame region', 'CSame country', 'DSame state', 'ESame continent'), each = nb_cat)
 cat = c(rep(rev(LETTERS[1:nb_cat]), times = 4))
+
+## Create list to store the frequencies
 freq = rep(NA, nb_cat*4)
 
-## Regions, averaged across different countries
+
+
+## Compute proportion by regions, averaged across different countries
 a = which((master.dat$Precision_loc == "City" | master.dat$Precision_loc == "Province" | 
             master.dat$Precision_loc == "Region") & 
             master.dat$Collection.Year >= 2000)
@@ -123,7 +141,9 @@ for(i in 1:length(c)){
 }
 freq[(1:nb_cat)+(0*nb_cat)] = apply(res_prop_region_per_country, MARGIN = 2, function(x)mean(x, na.rm = T))*1000
 
-## EU countries
+
+
+## Compute proportion by EU countries
 a = c(which(master.dat$Dataset == 'Pasteur_Brisse+EU'), which(master.dat$Dataset == 'EU_dataset'))
 geo_mat = geo_mat_country[a,a]
 time_mat2 = time_mat[a,a]<=1
@@ -132,7 +152,9 @@ mat_tmp = MRCA_mat2*geo_mat*time_mat2
 mat_tmp[which(mat_tmp == 0)] = NA
 freq[(1:nb_cat)+(1*nb_cat)] = hist(mat_tmp, breaks = breaks, plot = F)$count
 
-## US states
+
+
+## Compute proportion by US states
 a = which(master.dat$Country == 'US' & master.dat$Collection.Year >= 2010)
 b = which(master.dat[which(master.dat$Country == "US"),]$Collection.Year>= 2010)
 geo_mat = geo_mat_states_US[b,b]
@@ -142,7 +164,9 @@ mat_tmp = MRCA_mat2*geo_mat*time_mat2
 mat_tmp[which(mat_tmp == 0)] = NA
 freq[(1:nb_cat)+(2*nb_cat)] = hist(mat_tmp, breaks = breaks, plot = F)$count
 
-## Continents, averaged across different continents
+
+
+## Compute proportion by continent, averaged across continents
 a = which(master.dat$Collection.Year >= 2010)
 master.dat_tmp = master.dat[a,]
 c = levels(as.factor(master.dat_tmp$Continent))
@@ -160,12 +184,20 @@ for(i in 1:length(c)){
   }
 }
 freq[(1:nb_cat)+(3*nb_cat)] = apply(res_prop_contient_per_continent[c(2,3,5),], MARGIN = 2, function(x)mean(x, na.rm = T))*1000
+######################################################################
+
+
+
 
 ######################################################################
 ## Save results
 ######################################################################
 Data = data.frame(loc, cat, freq)
 saveRDS(Data, 'Proportion_MRCA/Proportion_pairs_MRCA_per_different_locs.rds')
+######################################################################
+
+
+
 
 ######################################################################
 ## Plot results
