@@ -1,23 +1,24 @@
-## MCMC fitness
-## By country, by genotype 
-library(questionr)
-library(treeio)
-library(ape)
+#######################################################
+## Run fitness model
+#######################################################
+### Author: Noemie Lefrancq
+### Last modification: 28/01/2022
+#######################################################
+
+## Load required packages
 library(rstan)
-library(gridExtra)
-library(grid)
-library(gtable)
 library(doParallel)  
 library(loo)
 rstan_options(auto_write = TRUE)
 
-############# R(t) model
+############# Load model and compile
 model.MCMC <- stan_model(file = 'Estimate_relative_fitness/Model_relative_fitness_genotypes_vaccine_switch_250421.stan')
 
-############# data for MCMC ######################################################
+############# Data
 data.MCMC = readRDS('Estimate_relative_fitness/Data_model_allcountries_refgeno5.rds')
 
-############# parameters vaccination #############################################
+
+############# Parameters vaccination #############################################
 data.MCMC$R_every_pre_vacc = 12
 data.MCMC$number_R_pre_vacc = 1; 
 
@@ -30,19 +31,26 @@ data.MCMC$yearF0 = data.MCMC$WCV_introduction
 ## ACV introduction (vector of length countries)
 data.MCMC$yearIntroduction = data.MCMC$booster_introduction
 
+
+
+
 ##################################################################################
 ## Run MCMC 
 ##################################################################################
+## Name output
 name_file = 'Estimate_relative_fitness/Output_WCV_booster_ref3'
 
+## Number of cores to use
 no_cores = 3
 registerDoParallel(cores=no_cores)  
 cl = makeCluster(no_cores) 
 
+## Seed
 seed <- floor(runif(1, min = 1, max = 1E6))
 # seed = 124
 print(paste0('seed = ', seed))
 
+## Function to draw initial frequencies
 f0_init = function(nb_countries, nb_geno){
   res = matrix(0, ncol = nb_geno, nrow = nb_countries)
   res[,1] = rnorm(nb_countries, mean = 1-nb_geno*0.08, sd = 0.01)
@@ -108,7 +116,7 @@ print('Writing chains')
 saveRDS(Chains, paste0(name_file, '_chains_all.rds'))
 
 ################################################################################
-## COmpute WAIC and LOO of the model
+## Compute WAIC and LOO of the model
 ################################################################################
 library(loo)
 log_lik_1 <- extract_log_lik(fit$fit, merge_chains = F)
