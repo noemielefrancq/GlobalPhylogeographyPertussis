@@ -1,5 +1,12 @@
-## MCMC fitness
-## By country, by genotype 
+#######################################################
+## Code to prepare data for the fitness model
+#######################################################
+### Author: Noemie Lefrancq
+### Last modification: 28/01/2022
+#######################################################
+
+
+## Load necessary packages
 library(questionr)
 library(treeio)
 library(ape)
@@ -9,21 +16,24 @@ library(grid)
 library(gtable)
 library(ggpubr)
 library(binom)
+library(stringr)
 
-## Preparation data ########################################
-## read data ###############################################
+## Load metadata ###############################################
 data = readRDS('Estimate_relative_fitness/data_tips_and_nodes_clades.rds') 
+data_antigens = read.csv('Data/Metadata_analyses_26012022.csv', sep = ';')
+
+## Load tree
 tree.beast = read.beast('Data/Beast_tree_MCC_26012022.tree')
 tree = tree.beast@phylo
 
-## get distance between nodes
+## Get distance between nodes
 mat.dist.nodes = dist.nodes(tree)
 diag(mat.dist.nodes) = NA
 nb_tips = length(tree$tip.label)
 
-## For continents, do not consider nodes that are more than 10 years apart from any sequence
-## Labeling of nodes: 1:ntips = tips numbers, then node numbers 
-threshold = 5 ## to change if needed, threshold of minimum distance to at least one tip
+## Check the continent labels of each node
+## For continents, do not consider nodes that are more than 5 years away from any sequence
+threshold = 5 ## threshold of minimum distance to at least one tip
 node_vect = (nb_tips+1):(nb_tips*2-1)
 list_to_remove = NULL
 list_nb = NULL
@@ -32,17 +42,18 @@ for (i in node_vect){
   list_nb = c(list_nb, length(a))
   if (length(a) == 0){list_to_remove = c(list_to_remove, i)}
 }
-## Take out these values
 
+## Take out these values
 data = data[-list_to_remove,]
 
-## common values
+## Common values
 data$date = 2019-round(as.numeric(data$height))
 max_date = 2030
 min_date = min(data$date)
 min_date = 1940
 seasons = seq(min_date, max_date, 1)
 
+## List of clades
 clades_prn_pos = levels(as.factor(data$clade))[c(1,2,3)]
 clades_prn_neg = as.numeric(levels(as.factor(data$clade))[-c(1,2,3)])[order(as.numeric(levels(as.factor(data$clade))[-c(1,2,3)]))]
 
@@ -56,18 +67,14 @@ vaccine_introduction =  c(1999, 1999, 1997, 2012, 2007, 1997, 2005, 2005, 2004, 
 vaccine_introduction_country = c('AU', 'BE', 'CA', 'CN', 'CZ', 'DK', 'ES', 'FI', 'FR', 'IE', 'IL', 'IR', 'IT', 'NL', 'NO', 'SE', 'TN', 'UK', 'US', 'JP')
 cut_at_WCV = F
 
-
 ####################################################################################################
 ## Divide those clades into country specific clades
 ####################################################################################################
-################################################
-###### BEAST
-################################################
-library(stringr)
+###### Remove country state when posterior probability is <0.9 
 data$country = data$Countries
 a = which(as.numeric(data$Countries.prob) < 0.9)
 data$country[a] = NA
-data = data[which(!is.na(data$country)),] ## Take out NA - to delete at some point
+data = data[which(!is.na(data$country)),]
 
 data$clade = as.factor(data$clade)
 t = table(data$clade)
@@ -145,11 +152,10 @@ list_US = compute_clade_numbers_country_1('US')
 ################################################
 seasons_plot = seasons
 nb_years = length(seasons)
+
 ################################################
 ## Add genotype info
 ################################################
-data_antigens = read.csv('Data/Metadata_analyses_26012022.csv', sep = ';')
-
 compute_data_obs_country = function(list_x_prn_neg, list_x_prn_pos, list_clades_neg){
   data_obs = NULL
   ## Set prn - data
@@ -157,7 +163,7 @@ compute_data_obs_country = function(list_x_prn_neg, list_x_prn_pos, list_clades_
     a =  which(data$clade == as.character(list_clades_neg[i]))
     seqs = data$label[a]
     seqs = seqs[which(is.na(seqs) == F)]
-    b = match(seqs, data_antigens$ï..Isolate)
+    b = match(seqs, data_antigens$Ã¯..Isolate)
     c = data_antigens[b,]
     fim = freq(as.factor(as.character(c$fim3)))
     fim = row.names(fim)[which(fim$`val%`>50)]
@@ -364,8 +370,13 @@ recompute_total_number_per_year = function(data_tmp){
 ################################################################################
 
 
+
+
+
+
+
 ################################################################################
-## Prepare data: all countries
+## Prepare data in the right fotmat for fitnel model
 ################################################################################
 nb_clades = length(data_obs_FR_geno)
 nb_years = nrow(data_obs_FR[[1]])
@@ -400,17 +411,15 @@ vaccine_introduction[8] = 2005 ## Finland
 vaccine_introduction[9] = 2004 ## France
 vaccine_introduction[10] = 1996 ## Ireland
 vaccine_introduction[11] = 2002 ## Israel
-# vaccine_introduction[12] = max_date ## Iran
 vaccine_introduction[12] = 1995 ## Italy
 vaccine_introduction[13] = 2005 ## NL
 vaccine_introduction[14] = 1998 ## Norway
 vaccine_introduction[15] = 1998 ## Sweden
-# vaccine_introduction[17] = max_date ## Tunisia
 vaccine_introduction[16] = 2000 ## UK
 vaccine_introduction[17] = 1997 ## US
 if(nb_countries >= 18) {vaccine_introduction[18] = 1981} ## Japan
-if(nb_countries >= 19) {vaccine_introduction[19] = 2050} ## Iran -- Not implemented yet
-if(nb_countries >= 20) {vaccine_introduction[20] = 2050} ## Tunisia -- Not implemented yet
+if(nb_countries >= 19) {vaccine_introduction[19] = 2050} ## Iran -- Not implemented (yet)
+if(nb_countries >= 20) {vaccine_introduction[20] = 2050} ## Tunisia -- Not implemented (yet)
 vaccine_introduction = vaccine_introduction-min_date
 
 ## Booster ACV introduction in the pop (with or without WCV as primo vaccination)
@@ -459,8 +468,8 @@ WCV_introduction[15] = 1953 ## Sweden
 WCV_introduction[16] = 1957 ## UK
 WCV_introduction[17] = 1940 ## US
 if(nb_countries >= 18) {WCV_introduction[18] = 1947} ## Japan
-if(nb_countries >= 19) {WCV_introduction[19] = 1950} ## Iran -- Not implemented (yet)
-if(nb_countries >= 20) {WCV_introduction[20] = 1978} ## Tunisia -- Not implemented (yet)
+if(nb_countries >= 19) {WCV_introduction[19] = 1950} ## Iran 
+if(nb_countries >= 20) {WCV_introduction[20] = 1978} ## Tunisia
 WCV_introduction = WCV_introduction-min_date
 
 ## Year to reach 80% coverage in vaccine
@@ -477,17 +486,15 @@ coverage80p[8] = 1981 ## Finland
 coverage80p[9] = 1983 ## France
 coverage80p[10] = 1999 ## Ireland
 coverage80p[11] = 1981 ## Israel
-# coverage80p[12] = max_date ## Iran
 coverage80p[12] = 1991 ## Italy
 coverage80p[13] = 1981 ## NL
 coverage80p[14] = 1984 ## Norway
 coverage80p[15] = 1981 ## Sweden
-# coverage80p[17] = max_date ## Tunisia
 coverage80p[16] = 1991 ## UK
 coverage80p[17] = 1981 ## US
 if(nb_countries >= 18) {coverage80p[18] = 1983} ## Japan
-if(nb_countries >= 19) {coverage80p[19] = 1988} ## Iran -- ACV Not implemented (yet)
-if(nb_countries >= 20) {coverage80p[20] = 1987} ## Tunisia -- ACV Not implemented (yet)
+if(nb_countries >= 19) {coverage80p[19] = 1988} ## Iran 
+if(nb_countries >= 20) {coverage80p[20] = 1987} ## Tunisia 
 coverage80p = coverage80p-min_date
 
 ## Year to reach 90% coverage in vaccine
