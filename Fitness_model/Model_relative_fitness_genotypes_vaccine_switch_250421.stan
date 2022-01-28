@@ -1,3 +1,15 @@
+// ##################################################################
+// ##              Estimation of relative fitness                  ##
+// ##                         Stan code                            ##
+// ##                                                              ##
+// ## Author: Noemie Lefrancq                                      ##
+// ## Email: ncmjl2@cam.ac.uk                                      ##
+// ## Last update: 28/01/2022                                      ##
+// ##                                                              ##
+// ##                                                              ##  
+// ##################################################################
+
+
 functions {
 	real[] logistic_model(real y0, real fitness_clades_pre_vacc, real fitness_clades_post_vacc, int nb_years, int vaccine_introduction, int ACV_introduction){
 		real res[nb_years];
