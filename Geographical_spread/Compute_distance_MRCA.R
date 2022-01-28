@@ -14,7 +14,7 @@ library(REdaS)
 library(questionr)
 
 
-## Load Tree
+## Load trees
 trees= readRDS('Data/Beast_10_posterior_trees_26012022.rds')
 
 
