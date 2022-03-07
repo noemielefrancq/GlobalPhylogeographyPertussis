@@ -1,11 +1,16 @@
-#### ### Function used to filter vcf files 
-## 27 01 2020
+#######################################################
+##       Script used to filter vcf files 
+#######################################################
+### Author: Noemie Lefrancq
+### Last modification: 27/01/2020
+#######################################################
 
+## Load libraries
 library(seqinr)
 library(stringr)
 library(vcfR)
 
-#Parameters to select the SNPs:
+## Parameters to select the SNPs:
 q_second = 100 #Phred quality score 
 n_reads_F_R = 2 # minimum number of reads per strand
 DP_min = 5  # Minimum read depth
@@ -13,6 +18,7 @@ p_reads_min1 = 0.40 #Percentage of reads to replace by IUPAC code (REF or potent
 p_reads_min2 = 0.80 #Percentage of reads to have to be a SNP
 p_ref = 1 
 
+## Function used to replace uncertain SNP by IUPAC code
 replace <- function(y){
   y = str_replace(y, "A,C,G,T", "N")
   y = str_replace(y, "A,C,T,G", "N") 
@@ -80,6 +86,7 @@ replace <- function(y){
   y = str_replace(y, "A,C", "M")
   y = str_replace(y, "C,A", "M")
 }
+## Function used to take out phage regions
 positions_phage_region_N = function(x){
   pos_rm = which(x$POS>=37926 & x$POS<=46978) #phage region 1
   pos_rm = c(pos_rm, which(x$POS>=494583 & x$POS<=531881)) #phage region 2
@@ -88,6 +95,8 @@ positions_phage_region_N = function(x){
   x = x[pos_rm,]
   return(x)
 }
+
+## Main function used to filter SNPs
 write_filtered_fasta = function(data2, names_year, names_files, names_isolates, place, directory_write, directory_read){
   
   #Compute the lists of SNPs which respect the criterias (see before)
